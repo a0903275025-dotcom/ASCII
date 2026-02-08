@@ -2,10 +2,82 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>ASCII</title>
+  <title>客戶語音紀錄系統</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 16px;
+      background: #f5f5f5;
+    }
+    h1 {
+      text-align: center;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 6px 0;
+      font-size: 16px;
+    }
+    .item {
+      background: #fff;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+    }
+  </style>
 </head>
 <body>
-  <h1>GitHub Pages 成功</h1>
-  <p>這是最外層的 index.html</p>
+
+<h1>📍 客戶語音紀錄</h1>
+
+<input id="name" placeholder="客戶名稱">
+<input id="address" placeholder="地址（例如：宜蘭縣冬山鄉…）">
+
+<button onclick="startVoice()">🎤 用語音輸入客戶名稱</button>
+<button onclick="save()">💾 儲存客戶</button>
+
+<div id="list"></div>
+
+<script>
+  const list = document.getElementById("list");
+  let customers = JSON.parse(localStorage.getItem("customers") || "[]");
+
+  function render() {
+    list.innerHTML = "";
+    customers.forEach(c => {
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `<b>${c.name}</b><br>${c.address}`;
+      list.appendChild(div);
+    });
+  }
+
+  function save() {
+    const name = document.getElementById("name").value;
+    const address = document.getElementById("address").value;
+    if (!name || !address) {
+      alert("請輸入完整資料");
+      return;
+    }
+    customers.push({ name, address });
+    localStorage.setItem("customers", JSON.stringify(customers));
+    document.getElementById("name").value = "";
+    document.getElementById("address").value = "";
+    render();
+  }
+
+  function startVoice() {
+    const rec = new webkitSpeechRecognition();
+    rec.lang = "zh-TW";
+    rec.start();
+    rec.onresult = e => {
+      document.getElementById("name").value = e.results[0][0].transcript;
+    };
+  }
+
+  render();
+</script>
+
 </body>
 </html>
