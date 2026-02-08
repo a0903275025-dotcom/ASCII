@@ -2,82 +2,137 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>客戶語音紀錄系統</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>客戶語音記錄系統</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body {
-      font-family: sans-serif;
-      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #f5f5f5;
+      margin: 0;
+      padding: 16px;
     }
+
     h1 {
       text-align: center;
     }
-    input, button {
+
+    .box {
+      background: #ffffff;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    input {
       width: 100%;
-      padding: 12px;
+      padding: 10px;
       margin: 6px 0;
       font-size: 16px;
+      box-sizing: border-box;
     }
-    .item {
-      background: #fff;
-      padding: 10px;
-      margin-top: 10px;
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      font-size: 16px;
+      border: none;
       border-radius: 6px;
+      background: #007bff;
+      color: #fff;
+    }
+
+    button.voice {
+      background: #28a745;
+    }
+
+    .customer {
+      border-bottom: 1px solid #ddd;
+      padding: 8px 0;
+    }
+
+    .customer:last-child {
+      border-bottom: none;
+    }
+
+    .small {
+      color: #666;
+      font-size: 14px;
     }
   </style>
 </head>
+
 <body>
 
-<h1>📍 客戶語音紀錄</h1>
+  <h1>📋 客戶語音記錄系統</h1>
 
-<input id="name" placeholder="客戶名稱">
-<input id="address" placeholder="地址（例如：宜蘭縣冬山鄉…）">
+  <div class="box">
+    <input id="name" placeholder="客戶名稱">
+    <input id="address" placeholder="地址（只記地址，不用經緯度）">
 
-<button onclick="startVoice()">🎤 用語音輸入客戶名稱</button>
-<button onclick="save()">💾 儲存客戶</button>
+    <button class="voice" onclick="startVoice()">🎤 語音輸入客戶名稱</button>
+    <button onclick="save()">💾 儲存客戶</button>
+  </div>
 
-<div id="list"></div>
+  <div class="box">
+    <h3>已儲存客戶</h3>
+    <div id="list"></div>
+  </div>
 
-<script>
-  const list = document.getElementById("list");
-  let customers = JSON.parse(localStorage.getItem("customers") || "[]");
+  <script>
+    const list = document.getElementById("list");
+    let customers = JSON.parse(localStorage.getItem("customers") || "[]");
 
-  function render() {
-    list.innerHTML = "";
-    customers.forEach(c => {
-      const div = document.createElement("div");
-      div.className = "item";
-      div.innerHTML = `<b>${c.name}</b><br>${c.address}`;
-      list.appendChild(div);
-    });
-  }
-
-  function save() {
-    const name = document.getElementById("name").value;
-    const address = document.getElementById("address").value;
-    if (!name || !address) {
-      alert("請輸入完整資料");
-      return;
+    function render() {
+      list.innerHTML = "";
+      customers.forEach((c, i) => {
+        const div = document.createElement("div");
+        div.className = "customer";
+        div.innerHTML = `
+          <b>${c.name}</b><br>
+          <span class="small">${c.address}</span>
+        `;
+        list.appendChild(div);
+      });
     }
-    customers.push({ name, address });
-    localStorage.setItem("customers", JSON.stringify(customers));
-    document.getElementById("name").value = "";
-    document.getElementById("address").value = "";
+
+    function save() {
+      const name = document.getElementById("name").value.trim();
+      const address = document.getElementById("address").value.trim();
+
+      if (!name || !address) {
+        alert("請輸入客戶名稱與地址");
+        return;
+      }
+
+      customers.push({ name, address });
+      localStorage.setItem("customers", JSON.stringify(customers));
+
+      document.getElementById("name").value = "";
+      document.getElementById("address").value = "";
+
+      render();
+    }
+
+    function startVoice() {
+      if (!("webkitSpeechRecognition" in window)) {
+        alert("你的瀏覽器不支援語音輸入");
+        return;
+      }
+
+      const rec = new webkitSpeechRecognition();
+      rec.lang = "zh-TW";
+      rec.start();
+
+      rec.onresult = (e) => {
+        document.getElementById("name").value = e.results[0][0].transcript;
+      };
+    }
+
     render();
-  }
-
-  function startVoice() {
-    const rec = new webkitSpeechRecognition();
-    rec.lang = "zh-TW";
-    rec.start();
-    rec.onresult = e => {
-      document.getElementById("name").value = e.results[0][0].transcript;
-    };
-  }
-
-  render();
-</script>
+  </script>
 
 </body>
 </html>
